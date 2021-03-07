@@ -1,8 +1,30 @@
 # Diabetes database
 
 import pandas as pd
-dbdf = pd.read_csv('/content/Diabetes Database.csv')
+import math
+import matplotlib.pyplot as plt
+import seaborn as sns
 
+from sklearn.model_selection import train_test_split
+
+# Model selection
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import RandomForestClassifier
+
+from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import cross_val_score
+
+
+
+from sklearn.metrics import accuracy_score
+import warnings
+warnings.filterwarnings("ignore")
+
+# Data exploration
+dbdf = pd.read_csv('/content/Diabetes Database.csv')
 dbdf.head()
 
 print('Different attributes provided in the dataset to find which patients have diabeties are...')
@@ -13,8 +35,6 @@ print(dbdf.columns.values)
 dbdf.groupby(dbdf.columns[-1]).size()
 
 # Data distribution
-import matplotlib.pyplot as plt
-
 fig = plt.figure(figsize = (9,9))
 ax = fig.gca()
 dbdf.hist(ax = ax)
@@ -25,12 +45,13 @@ dbdf.groupby(dbdf.columns[-1]).hist(figsize = (9,9))
 print('OUTCOME - 0 (is 1st subplot) & OUTCOME - 1 (is 2nd subplot)')
 plt.show()
 
+# Data cleaning
 # Finding whether any missing values are present in the data
 dbdf.isna().sum()
-
 # Finding whether any null values are present in the data
 dbdf.isnull().sum()
 
+# Outliers
 # For diabetes dataset, possible outliers would be attributes value equals to zero. 
 # So we would check whether attribute values are zero.
 for i in range(1, len(dbdf.columns) - 3):
@@ -44,25 +65,15 @@ for i in range(1, len(dbdf.columns) - 3):
 # Since for SkinThickness and Insulin, Total values is large.
 # It will not be a better option to remove those rows.
 # So we try to remove the rows of atrribute Glucose, BloodPressure and BMI
-
 mdf = dbdf[(dbdf.Glucose != 0) & (dbdf.BloodPressure != 0) & (dbdf.BMI != 0)]
 
 X = mdf.iloc[:,:-1].values
 y = mdf.iloc[:,-1].values.reshape(-1,1)
 
 # Split the data into train and test
-from sklearn.model_selection import train_test_split
-
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.25, random_state = 0)
 
 # Model selection
-
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.ensemble import RandomForestClassifier
-
 models = []
 models.append(('KNN', KNeighborsClassifier()))
 models.append(('LR', LogisticRegression()))
@@ -70,11 +81,7 @@ models.append(('DT', DecisionTreeClassifier()))
 models.append(('GNB', GaussianNB()))
 models.append(('RF', RandomForestClassifier()))
 
-from sklearn.metrics import accuracy_score
-import warnings
-warnings.filterwarnings("ignore")
-
-
+# Finding the accuracy of 5 different models
 names = []
 scores = []
 
@@ -87,9 +94,7 @@ for name, model in models:
 tr_split = pd.DataFrame({'Name': names, 'Score': scores})
 print(tr_split)
 
-from sklearn.model_selection import StratifiedKFold
-from sklearn.model_selection import cross_val_score
-
+# K-Fold cross validation
 strat_k_fold = StratifiedKFold(n_splits=10, random_state=10)
 
 names = []
@@ -104,7 +109,6 @@ for name, model in models:
 kf_cross_val = pd.DataFrame({'Name': names, 'Score': scores})
 print(kf_cross_val)
 
-import seaborn as sns
 
 axis = sns.barplot(x = 'Name', y = 'Score', data = kf_cross_val)
 axis.set(xlabel='Classifier', ylabel='Accuracy')
@@ -116,7 +120,6 @@ for p in axis.patches:
 plt.show()
 
 # Random Forest Classifier from scratch
-
 class RandomForest():
     def __init__(self, x, y, n_trees, n_features, sample_sz, depth=10, min_leaf=5):
         np.random.seed(12)
@@ -200,8 +203,7 @@ class DecisionTree():
         t = self.lhs if xi[self.var_idx]<=self.split else self.rhs
         return t.predict_row(xi)
 
-import math
-model = RandomForest(X_train, y_train, n_trees=100, n_features='sqrt', sample_sz=len(X_train))#, depth=10, min_leaf=2)
+model = RandomForest(X_train, y_train, n_trees=100, n_features='sqrt', sample_sz=len(X_train))
 preds = model.predict(X_test)
 
 RF_acc = sum(preds == y_test)/len(y_test)
