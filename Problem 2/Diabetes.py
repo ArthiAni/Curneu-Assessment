@@ -1,6 +1,7 @@
 # Diabetes database
 
 import pandas as pd
+import numpy as np
 import math
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -118,6 +119,54 @@ for p in axis.patches:
     axis.text(p.get_x() + p.get_width()/2, height + 0.005, '{:1.4f}'.format(height), ha="center") 
     
 plt.show()
+
+# Logistic regression and Random Forest have almost same accuracy for diabetes prediction.
+# So let's try to build both the models from scratch and find which one give best result(in scratch).
+
+#Logistic Regression
+class LogitRegression():
+    def __init__(self, learning_rate, iterations):
+        self.learning_rate = learning_rate         
+        self.iterations = iterations
+
+    def fit(self, X, Y):
+        self.m, self.n = X.shape
+        self.W = np.zeros(self.n)
+        self.b = 0
+        self.X = X
+        self.Y = Y
+        for i in range(self.iterations):
+            self.update_weights()
+        return self
+      
+    def update_weights(self):
+        A = 1 / (1 + np.exp(-(self.X.dot(self.W) + self.b)))
+        tmp = (A - self.Y.T)         
+        tmp = np.reshape(tmp, self.m)         
+        dW = np.dot(self.X.T, tmp) / self.m          
+        db = np.sum(tmp) / self.m  
+          
+        self.W = self.W - self.learning_rate * dW     
+        self.b = self.b - self.learning_rate * db 
+        return self
+      
+    def predict(self, X) :     
+        Z = 1 / (1 + np.exp(-(X.dot(self.W) + self.b)))         
+        Y = np.where(Z > 0.5, 1, 0)
+        return Y
+
+model = LogitRegression(learning_rate = 0.02, iterations = 6000)
+model.fit(X_train, y_train)
+Y_pred = model.predict(X_test)
+
+correctly_classified = 0
+count = 0
+for count in range(np.size(Y_pred)):
+  if y_test[count] == Y_pred[count]:
+    correctly_classified = correctly_classified + 1
+  count = count + 1
+LR_acc = np.round(correctly_classified/count,3)
+print("Accuracy on test set by our model :",LR_acc)
 
 # Random Forest Classifier from scratch
 class RandomForest():
