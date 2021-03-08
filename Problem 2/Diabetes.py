@@ -258,3 +258,12 @@ preds = model.predict(X_test)
 RF_acc = sum(preds == y_test)/len(y_test)
 RF_acc = np.round(RF_acc[RF_acc != 0],3)
 print("Testing accuracy: %.3f" %RF_acc[0])
+
+if RF_acc[0] > LR_acc:
+  print("Random Forest is the best model with {}% accuracy for Diabetes prediction".format(RF_acc[0]*100))
+elif RF_acc[0] < LR_acc:
+  print("Logistic Regression is the best model with {}% accuracy for Diabetes prediction".format(LR_acc*100))
+else:
+  print("Both Logistic and Random forest are the best model with {}% accuracy for Diabetes prediction".format(LR*100))
+
+# Logistic regression gives better performance for finding diabetes when compared to Random forest.
